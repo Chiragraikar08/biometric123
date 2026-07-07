@@ -8,7 +8,10 @@ dotenv.config();
 const { Pool } = pg;
 
 // Load Env variables — credentials stay in .env, never hardcoded
-const pgConnectionString = process.env.DATABASE_URL;
+const pgConnectionString = process.env.DATABASE_URL
+  ? process.env.DATABASE_URL.replace(/[&?]channel_binding=[^&]*/g, '') // strip unsupported param
+  : null;
+
 let pool = null;
 let useFallback = true;
 const FALLBACK_FILE_PATH = path.resolve('behavior_profiles.json');
@@ -18,12 +21,12 @@ if (pgConnectionString) {
   try {
     pool = new Pool({
       connectionString: pgConnectionString,
-      connectionTimeoutMillis: 5000, // Fail fast
+      connectionTimeoutMillis: 8000,
       ssl: {
         rejectUnauthorized: false, // Required for Neon PostgreSQL on Vercel
       },
     });
-    console.log('PostgreSQL Pool initialized.');
+    console.log('PostgreSQL Pool initialized with connection string.');
   } catch (err) {
     console.error('Failed to initialize PostgreSQL pool, falling back to JSON storage:', err.message);
   }
