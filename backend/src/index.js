@@ -31,47 +31,6 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Routes
-app.use('/', behaviorRoutes);
-
-// Healthcheck/status endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', time: new Date() });
-});
-
-import pg from 'pg';
-app.get('/debug-db', async (req, res) => {
-  try {
-    let rawUrl = process.env.DATABASE_URL;
-    if (!rawUrl) return res.json({ error: 'No DATABASE_URL found in env.' });
-    
-    let strippedUrl = rawUrl.replace(/[&?]channel_binding=[^&]*/g, '');
-    const pool = new pg.Pool({
-      connectionString: strippedUrl,
-      connectionTimeoutMillis: 5000,
-      ssl: true
-    });
-    
-    const client = await pool.connect();
-    const result = await client.query('SELECT NOW()');
-    client.release();
-    
-    res.json({
-      success: true,
-      time: result.rows[0],
-      urlPrefix: rawUrl.substring(0, 15) + '...'
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      errorName: err.name,
-      errorMessage: err.message,
-      errorCode: err.code,
-      errorStack: err.stack
-    });
-  }
-});
-
 // Start DB and then Server
 let dbInitPromise = null;
 
@@ -106,6 +65,45 @@ app.use(async (req, res, next) => {
     await dbInitPromise;
   }
   next();
+});
+
+// Routes
+app.use('/', behaviorRoutes);
+
+// Healthcheck/status endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'healthy', time: new Date() });
+});
+
+import pg from 'pg';
+app.get('/debug-db', async (req, res) => {
+  try {
+    let rawUrl = process.env.DATABASE_URL;
+    if (!rawUrl) return res.json({ error: 'No DATABASE_URL found in env.' });
+    
+    let strippedUrl = rawUrl.replace(/[&?]channel_binding=[^&]*/g, '');
+    const pool = new pg.Pool({
+      connectionString: strippedUrl,
+      connectionTimeoutMillis: 5000,
+      ssl: true
+    });
+    
+    const client = await pool.connect();
+    const result = await client.query('SELECT NOW()');
+    client.release();
+    
+    res.status(200).json({ 
+      success: true, 
+      time: result.rows[0],
+      urlPrefix: strippedUrl.substring(0, 15) + '...'
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false, 
+      error: err.message,
+      errorStack: err.stack
+    });
+  }
 });
 
 export default app;
