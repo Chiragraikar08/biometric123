@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import useKeystrokeCapture from '../hooks/useKeystrokeCapture';
 import TypingArea from '../components/TypingArea';
 import * as api from '../services/behaviorApi';
@@ -186,6 +186,168 @@ export function BehaviorAuthentication() {
     return '#ef4444'; // red
   };
 
+  const downloadCertificate = useCallback(() => {
+    if (!authResult || authResult.status !== 'MATCH') return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 900;
+    canvas.height = 620;
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient
+    const bg = ctx.createLinearGradient(0, 0, 900, 620);
+    bg.addColorStop(0, '#0a0f1e');
+    bg.addColorStop(1, '#0f1629');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 900, 620);
+
+    // Outer glow border
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 4;
+    ctx.shadowColor = '#10b981';
+    ctx.shadowBlur = 20;
+    ctx.strokeRect(20, 20, 860, 580);
+    ctx.shadowBlur = 0;
+
+    // Inner decorative border
+    ctx.strokeStyle = 'rgba(16,185,129,0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(36, 36, 828, 548);
+
+    // Badge circle top-center
+    ctx.beginPath();
+    ctx.arc(450, 85, 45, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(16,185,129,0.15)';
+    ctx.fill();
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Checkmark in circle
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(430, 85);
+    ctx.lineTo(445, 100);
+    ctx.lineTo(470, 70);
+    ctx.stroke();
+
+    // Title
+    ctx.shadowColor = '#10b981';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('BIOMETRIC AUTHENTICATION', 450, 155);
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 38px Arial';
+    ctx.fillText('CERTIFICATE OF IDENTITY', 450, 200);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '14px Arial';
+    ctx.fillText('This certifies that the following user has been successfully verified via', 450, 230);
+    ctx.fillText('keystroke dynamics and behavioral biometric analysis.', 450, 250);
+
+    // Divider line
+    ctx.strokeStyle = 'rgba(16,185,129,0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(100, 270);
+    ctx.lineTo(800, 270);
+    ctx.stroke();
+
+    // User ID label
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '13px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('USER IDENTITY', 450, 305);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 32px Arial';
+    ctx.fillText(userId, 450, 345);
+
+    // Score section
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '13px Arial';
+    ctx.fillText('BEHAVIOR SCORE', 450, 380);
+
+    ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 48px Arial';
+    ctx.fillText(`${authResult.behaviorScore}%`, 450, 430);
+
+    // Metric pills
+    if (authResult.similarities) {
+      const metrics = [
+        { label: 'Hold Time', val: `${Math.round(authResult.similarities.averageHoldTime * 100)}%` },
+        { label: 'Flight Time', val: `${Math.round(authResult.similarities.averageFlightTime * 100)}%` },
+        { label: 'Speed', val: `${Math.round(authResult.similarities.typingSpeed * 100)}%` },
+        { label: 'Duration', val: `${Math.round(authResult.similarities.typingDuration * 100)}%` },
+      ];
+      const pillWidth = 160;
+      const totalWidth = metrics.length * pillWidth + (metrics.length - 1) * 16;
+      let startX = (900 - totalWidth) / 2;
+
+      metrics.forEach(({ label, val }) => {
+        ctx.fillStyle = 'rgba(16,185,129,0.1)';
+        ctx.strokeStyle = 'rgba(16,185,129,0.4)';
+        ctx.lineWidth = 1;
+        const rx = startX;
+        const ry = 450;
+        const rw = pillWidth;
+        const rh = 46;
+        const radius = 10;
+        ctx.beginPath();
+        ctx.moveTo(rx + radius, ry);
+        ctx.lineTo(rx + rw - radius, ry);
+        ctx.arcTo(rx + rw, ry, rx + rw, ry + radius, radius);
+        ctx.lineTo(rx + rw, ry + rh - radius);
+        ctx.arcTo(rx + rw, ry + rh, rx + rw - radius, ry + rh, radius);
+        ctx.lineTo(rx + radius, ry + rh);
+        ctx.arcTo(rx, ry + rh, rx, ry + rh - radius, radius);
+        ctx.lineTo(rx, ry + radius);
+        ctx.arcTo(rx, ry, rx + radius, ry, radius);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = '11px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(label.toUpperCase(), rx + rw / 2, ry + 16);
+        ctx.fillStyle = '#10b981';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(val, rx + rw / 2, ry + 34);
+
+        startX += pillWidth + 16;
+      });
+    }
+
+    // Divider
+    ctx.strokeStyle = 'rgba(16,185,129,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(100, 510);
+    ctx.lineTo(800, 510);
+    ctx.stroke();
+
+    // Footer
+    const now = new Date();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Issued: ${now.toUTCString()}  •  Powered by Behavioral Biometrics Engine`, 450, 540);
+    ctx.fillText('This certificate is cryptographically bound to the user behavioral baseline profile.', 450, 558);
+
+    // Download
+    const link = document.createElement('a');
+    link.download = `biometric-certificate-${userId}-${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }, [authResult, userId]);
+
   return (
     <div className="biometrics-dashboard">
       <div className="glow-bubble bubble-1"></div>
@@ -366,10 +528,33 @@ export function BehaviorAuthentication() {
         <section className="dashboard-card results-card fade-in">
           <div className="results-header">
             <h3>Verification Output</h3>
-            <div className="match-status-indicator">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <span className={`match-badge badge-${authResult.status.toLowerCase()}`}>
                 {authResult.status}
               </span>
+              {authResult.status === 'MATCH' && (
+                <button
+                  onClick={downloadCertificate}
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    padding: '0.55rem 1.2rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    boxShadow: '0 0 15px rgba(16,185,129,0.4)',
+                    transition: 'all 0.2s ease',
+                  }}
+                  title="Download your biometric identity certificate"
+                >
+                  🏅 Download Certificate
+                </button>
+              )}
             </div>
           </div>
 
@@ -403,8 +588,8 @@ export function BehaviorAuthentication() {
             </div>
           </div>
 
-          {/* Metric Breakdown Table */}
-          {authResult.similarities && (
+          {/* Metric Breakdown Table — always shown */}
+          {authResult.similarities ? (
             <div className="metrics-breakdown-wrapper">
               <h4>Biometric Similarity Breakdown</h4>
               <div className="table-responsive">
@@ -464,6 +649,10 @@ export function BehaviorAuthentication() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          ) : (
+            <div className="metrics-breakdown-wrapper" style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', textAlign: 'center' }}>
+              <p style={{ color: '#f87171', margin: 0, fontWeight: 600 }}>⚠️ No biometric similarity data available — the typed text was too different from the target sentence, or the profile was not found.</p>
             </div>
           )}
         </section>
