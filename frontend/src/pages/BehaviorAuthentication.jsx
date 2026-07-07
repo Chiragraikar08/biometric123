@@ -48,9 +48,26 @@ export function BehaviorAuthentication() {
     }
   };
 
+  // Check if profile exists on user ID change — debounced to avoid spamming
+  // partial-ID API calls on every keystroke (e.g. "s", "sa", "san"...)
   useEffect(() => {
-    checkProfileStatus();
+    if (!userId.trim()) {
+      setProfile(null);
+      setDbType('');
+      return;
+    }
+    const timer = setTimeout(() => {
+      checkProfileStatus(userId);
+    }, 600); // wait 600ms after user stops typing
+    return () => clearTimeout(timer);
   }, [userId]);
+
+  // Auto-switch to register tab when there is no profile
+  useEffect(() => {
+    if (!profile && activeTab === 'authenticate') {
+      setActiveTab('register');
+    }
+  }, [profile]);
 
   const handleRegisterProfile = async (e) => {
     e.preventDefault();
@@ -411,18 +428,34 @@ export function BehaviorAuthentication() {
         </button>
         <button
           className={`tab-btn ${activeTab === 'authenticate' ? 'tab-active' : ''}`}
-          onClick={() => {
-            if (!profile) {
-              alert('Please register a behavioral profile first!');
-              return;
-            }
-            setActiveTab('authenticate');
-          }}
+          onClick={() => setActiveTab('authenticate')}
           disabled={!profile}
+          title={!profile ? 'Complete Profile Registration first to unlock Authentication Test' : ''}
         >
-          2. Authentication Test
+          2. Authentication Test {!profile && '🔒'}
         </button>
       </div>
+
+      {/* New user hint — shown only when no profile exists */}
+      {!profile && !isLoading && (
+        <div style={{
+          background: 'rgba(139,92,246,0.08)',
+          border: '1px solid rgba(139,92,246,0.3)',
+          borderRadius: '10px',
+          padding: '0.8rem 1.2rem',
+          marginBottom: '1rem',
+          color: '#c4b5fd',
+          fontSize: '0.92rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.6rem'
+        }}>
+          <span style={{ fontSize: '1.2rem' }}>ℹ️</span>
+          <span>
+            <strong>New user?</strong> Complete <strong>Step 1 – Profile Registration</strong> below to record your typing biometrics. The Authentication Test tab will unlock automatically after registration.
+          </span>
+        </div>
+      )}
 
       {error && <div className="alert-message alert-error">{error}</div>}
       {success && <div className="alert-message alert-success">{success}</div>}
