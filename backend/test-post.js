@@ -13,6 +13,5 @@ fetch("https://backend-kappa-five-15.vercel.app/behavior-analysis", {
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ userId, sessionFeatures, register: true })
 })
-.then(res => res.json().then(data => ({status: res.status, data})))
-.then(console.log)
+.then(res => res.text().then(text => console.log(res.status, text)))
 .catch(console.error);

@@ -16,6 +16,9 @@ let pool = null;
 let useFallback = true;
 const FALLBACK_FILE_PATH = path.resolve('behavior_profiles.json');
 
+let initError = null;
+export function getInitError() { return initError; }
+
 // Check database connection and create tables
 export async function initializeDatabase() {
   const rawUrl = process.env.DATABASE_URL;
