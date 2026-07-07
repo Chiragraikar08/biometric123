@@ -49,7 +49,7 @@ app.get('/debug-db', async (req, res) => {
     const pool = new pg.Pool({
       connectionString: strippedUrl,
       connectionTimeoutMillis: 5000,
-      ssl: { rejectUnauthorized: false }
+      ssl: true
     });
     
     const client = await pool.connect();
