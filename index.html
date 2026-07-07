@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Writer - Human Only Input Verification</title>
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: rgba(17, 25, 40, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-primary: #3b82f6; /* Blue */
+      --accent-glow: rgba(59, 130, 246, 0.5);
+      --success: #10b981; /* Green */
+      --success-glow: rgba(16, 185, 129, 0.3);
+      --danger: #ef4444; /* Red */
+      --danger-glow: rgba(239, 68, 68, 0.4);
+      --text-main: #f3f4f6;
+      --text-sub: #9ca3af;
+      --transition-speed: 0.3s;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      background-image: 
+        radial-gradient(at 10% 20%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 90% 80%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      z-index: 10;
+    }
+
+    /* Glassmorphism Card */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-primary), var(--success));
+    }
+
+    header {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #f3f4f6, #9ca3af);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      color: var(--text-sub);
+      font-size: 1rem;
+      font-weight: 300;
+    }
+
+    /* Input Field Container */
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      background: rgba(9, 14, 23, 0.6);
+      border: 1.5px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      font-size: 1.05rem;
+      color: var(--text-main);
+      resize: none;
+      outline: none;
+      transition: all var(--transition-speed);
+      line-height: 1.6;
+    }
+
+    textarea:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* Red glow when AI/paste is blocked */
+    textarea.blocked {
+      border-color: var(--danger) !important;
+      box-shadow: 0 0 25px var(--danger-glow) !important;
+      animation: shake 0.4s ease-in-out;
+    }
+
+    /* Green glow when human typing is verified */
+    textarea.verified {
+      border-color: var(--success) !important;
+      box-shadow: 0 0 20px var(--success-glow) !important;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    /* Real-time Diagnostics Panel */
+    .diagnostics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      transition: color var(--transition-speed);
+    }
+
+    .metric-value.status-normal {
+      color: var(--accent-primary);
+    }
+
+    .metric-value.status-success {
+      color: var(--success);
+    }
+
+    .metric-value.status-danger {
+      color: var(--danger);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: rgba(239, 68, 68, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 16px 28px;
+      border-radius: 12px;
+      font-weight: 500;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transform: translateY(150%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 100;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+    }
+
+    .toast-icon {
+      font-size: 1.3rem;
+      background: rgba(255, 255, 255, 0.2);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.3);
+      font-weight: 300;
+    }
+
+    .footer a {
+      color: var(--text-sub);
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="card" id="mainCard">
+      <header>
+        <h1>Secure Writing Pad</h1>
+        <p>Verified human-input only. AI writing and copy-pasting are blocked.</p>
+      </header>
+
+      <div class="input-wrapper">
+        <textarea 
+          id="editor" 
+          placeholder="Start typing here... Try copy-pasting or using an automation script to test the defense mechanics."
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <div class="diagnostics">
+        <div class="metric">
+          <span class="metric-label">Input Mode</span>
+          <span class="metric-value status-success" id="inputStatus">Secure</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Typing Speed</span>
+          <span class="metric-value status-normal" id="typingSpeed">0 ms/ch</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Keystrokes</span>
+          <span class="metric-value" id="charCount">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Powered by Antigravity IDE • <a href="#">Learn about keystroke dynamics</a>
+    </div>
+  </div>
+
+  <!-- Custom Alert Toast -->
+  <div class="toast" id="errorToast">
+    <span class="toast-icon">⚠️</span>
+    <span id="toastMessage">Paste detected and blocked!</span>
+  </div>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const inputStatus = document.getElementById('inputStatus');
+    const typingSpeedText = document.getElementById('typingSpeed');
+    const charCountText = document.getElementById('charCount');
+    const errorToast = document.getElementById('errorToast');
+    const toastMessage = document.getElementById('toastMessage');
+
+    let previousValue = "";
+    let lastKeyTime = null;
+    let keyIntervals = [];
+    const maxIntervalHistory = 10; // Keep track of the last 10 keystrokes for running average
+
+    // Show custom warning toast
+    function showWarning(message) {
+      toastMessage.textContent = message;
+      errorToast.classList.add('show');
+      
+      // Visual response on textarea
+      editor.classList.add('blocked');
+      editor.classList.remove('verified');
+      
+      inputStatus.textContent = "BLOCKED";
+      inputStatus.className = "metric-value status-danger";
+
+      setTimeout(() => {
+        errorToast.classList.remove('show');
+      }, 4000);
+
+      setTimeout(() => {
+        editor.classList.remove('blocked');
+      }, 500);
+    }
+
+    // Monitor keystrokes
+    editor.addEventListener('keydown', (e) => {
+      // 1. Block Simulated Events (Automation / Scripts)
+      if (!e.isTrusted) {
+        e.preventDefault();
+        showWarning("Automated script inputs blocked!");
+        return;
+      }
+
+      // Track typing speed (except control keys)
+      if (e.key.length === 1) {
+        const currentTime = Date.now();
+        if (lastKeyTime !== null) {
+          const diff = currentTime - lastKeyTime;
+          
+          // Speed threshold to detect inhuman speed
+          if (diff < 15) { // Under 15ms is practically impossible for consecutive keydowns
+            e.preventDefault();
+            showWarning("Inhuman typing speed detected!");
+            return;
+          }
+
+          keyIntervals.push(diff);
+          if (keyIntervals.length > maxIntervalHistory) {
+            keyIntervals.shift();
+          }
+
+          // Calculate average typing latency
+          const avgInterval = Math.round(keyIntervals.reduce((a, b) => a + b, 0) / keyIntervals.length);
+          typingSpeedText.textContent = `${avgInterval} ms`;
+        }
+        lastKeyTime = currentTime;
+
+        // Visual validation feedback
+        editor.classList.add('verified');
+        inputStatus.textContent = "Verified Human";
+        inputStatus.className = "metric-value status-success";
+      }
+    });
+
+    // Monitor value mutations (for extensions, context menu pastes, drag-and-drop, autofill)
+    editor.addEventListener('input', (e) => {
+      const currentValue = editor.value;
+      const addedLength = currentValue.length - previousValue.length;
+
+      // If more than 1 character is added in a single transaction (AI writer paste, autofill, etc.)
+      if (addedLength > 1) {
+        editor.value = previousValue; // Rollback change
+        showWarning("AI input or paste blocked!");
+        return;
+      }
+
+      // Update keystroke count
+      charCountText.textContent = currentValue.length;
+      previousValue = currentValue;
+    });
+
+    // Explicitly block standard browser paste event (Ctrl+V or Right Click > Paste)
+    editor.addEventListener('paste', (e) => {
+      e.preventDefault();
+      showWarning("Direct pasting is disabled!");
+    });
+
+    // Explicitly block drag and drop text
+    editor.addEventListener('drop', (e) => {
+      e.preventDefault();
+      showWarning("Drag and drop input is disabled!");
+    });
+  </script>
+</body>
+</html>
