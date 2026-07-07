@@ -1,4 +1,4 @@
-const userId = "test-user-123";
+const userId = "final-demo-user";
 const sessionFeatures = {
   averageHoldTime: 150,
   averageFlightTime: 50,
@@ -11,7 +11,7 @@ const sessionFeatures = {
 fetch("https://backend-kappa-five-15.vercel.app/behavior-analysis", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ userId, sessionFeatures, register: false })
+  body: JSON.stringify({ userId, sessionFeatures, register: true })
 })
 .then(res => res.json().then(data => ({status: res.status, data})))
 .then(console.log)

@@ -32,6 +32,9 @@ if (pgConnectionString) {
   console.log('No DATABASE_URL provided. Using JSON file database fallback.');
 }
 
+let initError = null;
+export function getInitError() { return initError; }
+
 // Check database connection and create tables
 export async function initializeDatabase() {
   if (pool) {
@@ -77,12 +80,15 @@ export async function initializeDatabase() {
       console.log('PostgreSQL table user_behavior_sessions verified/created.');
 
       useFallback = false; // ✅ Successfully connected — disable fallback
+      initError = null;
     } catch (err) {
       console.error('PostgreSQL connection failed. Falling back to JSON database:', err.message);
       useFallback = true;
+      initError = err.message + ' | ' + err.stack;
     }
   } else {
     useFallback = true;
+    initError = "No connection pool available (likely no DATABASE_URL)";
   }
 
   if (useFallback) {

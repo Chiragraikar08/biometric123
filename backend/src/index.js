@@ -106,4 +106,9 @@ app.get('/debug-db', async (req, res) => {
   }
 });
 
+import { getInitError } from './models/behavior.model.js';
+app.get('/why-fallback', (req, res) => {
+  res.status(200).json({ error: getInitError() });
+});
+
 export default app;
