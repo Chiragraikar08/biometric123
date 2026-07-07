@@ -40,7 +40,10 @@ app.get('/health', (req, res) => {
 });
 
 // Start DB and then Server
+let dbInitPromise = null;
+
 if (!process.env.VERCEL) {
+  // Local: wait for DB before starting server
   async function startServer() {
     try {
       await initializeDatabase();
@@ -57,8 +60,19 @@ if (!process.env.VERCEL) {
   }
   startServer();
 } else {
-  // On Vercel, initialize database on function invocation
-  initializeDatabase().catch(err => console.error('Database connection failed:', err));
+  // On Vercel serverless: kick off DB init and store the promise.
+  // Each request middleware awaits this before proceeding — fixes cold-start race condition.
+  dbInitPromise = initializeDatabase().catch(err => {
+    console.error('Database connection failed:', err);
+  });
 }
+
+// Middleware to await DB init on Vercel before handling any request
+app.use(async (req, res, next) => {
+  if (dbInitPromise) {
+    await dbInitPromise;
+  }
+  next();
+});
 
 export default app;

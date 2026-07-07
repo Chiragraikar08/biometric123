@@ -60,9 +60,7 @@ export async function initializeDatabase() {
       await pool.query(createProfilesTable);
       console.log('PostgreSQL table user_behavior_profiles verified/created.');
 
-      // Table 2: Individual session history (one row per typing session — all 6 metrics)
-      // This is what the friend requested: sessions array with all fields including
-      // backspaceCount, errorCount, and typingDuration.
+      // Table 2: Individual session history
       const createSessionsTable = `
         CREATE TABLE IF NOT EXISTS user_behavior_sessions (
           id               SERIAL PRIMARY KEY,
@@ -80,7 +78,7 @@ export async function initializeDatabase() {
       await pool.query(createSessionsTable);
       console.log('PostgreSQL table user_behavior_sessions verified/created.');
 
-      useFallback = false;
+      useFallback = false; // ✅ Successfully connected — disable fallback
     } catch (err) {
       console.error('PostgreSQL connection failed. Falling back to JSON database:', err.message);
       useFallback = true;
@@ -91,8 +89,11 @@ export async function initializeDatabase() {
 
   if (useFallback) {
     console.log(`Using local JSON database at: ${FALLBACK_FILE_PATH}`);
-    if (!fs.existsSync(FALLBACK_FILE_PATH)) {
-      fs.writeFileSync(FALLBACK_FILE_PATH, JSON.stringify({}));
+    // On Vercel, filesystem is read-only — skip file creation attempt
+    if (typeof process !== 'undefined' && !process.env.VERCEL) {
+      if (!fs.existsSync(FALLBACK_FILE_PATH)) {
+        fs.writeFileSync(FALLBACK_FILE_PATH, JSON.stringify({}));
+      }
     }
   }
 }
