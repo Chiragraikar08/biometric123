@@ -10,10 +10,24 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+// Manually set CORS headers on every response — most reliable approach on Vercel
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS, PUT, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  // Respond to preflight OPTIONS requests immediately
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
 app.use(cors({
-  origin: '*', // For PoC, allow all origins
-  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: '*',
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS', 'PUT', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(express.json());
 
