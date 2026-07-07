@@ -26,6 +26,23 @@ function calculateFeatureSimilarity(sessionVal, profileVal, isCount = false) {
  * Returns a score from 0 to 100, and a match status (MATCH or MISMATCH).
  */
 export function calculateBehaviorScore(sessionFeatures, profile) {
+  // If the user typed the wrong sentence (huge discrepancy in errors/edit distance), fail immediately
+  const errorDiff = Math.abs(sessionFeatures.errorCount - profile.errorCount);
+  if (errorDiff > 8) {
+    return {
+      behaviorScore: 0,
+      status: 'MISMATCH',
+      similarities: {
+        averageHoldTime: 0,
+        averageFlightTime: 0,
+        typingSpeed: 0,
+        typingDuration: 0,
+        backspaceCount: 0,
+        errorCount: 0,
+      }
+    };
+  }
+
   // Weights (must sum to 1.0)
   const weights = {
     averageHoldTime: 0.25,

@@ -47,8 +47,13 @@ export async function analyzeBehavior(req, res) {
     // Retrieve existing user profile
     let profile = await db.getProfile(userId);
 
+    // If trying to authenticate but profile does not exist
+    if (!register && !profile) {
+      return res.status(404).json({ error: `No behavioral profile registered for user "${userId}". Please register first.` });
+    }
+
     // Registration flow
-    if (register || !profile) {
+    if (register) {
       const savedProfile = await db.saveProfile(userId, {
         averageHoldTime,
         averageFlightTime,
