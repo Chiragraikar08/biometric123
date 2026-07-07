@@ -404,66 +404,68 @@ export function BehaviorAuthentication() {
           </div>
 
           {/* Metric Breakdown Table */}
-          <div className="metrics-breakdown-wrapper">
-            <h4>Biometric Similarity Breakdown</h4>
-            <div className="table-responsive">
-              <table className="metrics-table">
-                <thead>
-                  <tr>
-                    <th>Biometric Metric</th>
-                    <th>Profile Baseline</th>
-                    <th>Session Reading</th>
-                    <th>Component Similarity</th>
-                    <th>Weight</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Average Key Hold Time</td>
-                    <td>{Math.round(authResult.profile.averageHoldTime)} ms</td>
-                    <td>{submittedFeatures ? Math.round(submittedFeatures.averageHoldTime) : '-'} ms</td>
-                    <td>{Math.round(authResult.similarities.averageHoldTime * 100)}%</td>
-                    <td>25%</td>
-                  </tr>
-                  <tr>
-                    <td>Average Flight Time</td>
-                    <td>{Math.round(authResult.profile.averageFlightTime)} ms</td>
-                    <td>{submittedFeatures ? Math.round(submittedFeatures.averageFlightTime) : '-'} ms</td>
-                    <td>{Math.round(authResult.similarities.averageFlightTime * 100)}%</td>
-                    <td>25%</td>
-                  </tr>
-                  <tr>
-                    <td>Typing Speed</td>
-                    <td>{Math.round(authResult.profile.typingSpeed)} WPM</td>
-                    <td>{submittedFeatures ? Math.round(submittedFeatures.typingSpeed) : '-'} WPM</td>
-                    <td>{Math.round(authResult.similarities.typingSpeed * 100)}%</td>
-                    <td>20%</td>
-                  </tr>
-                  <tr>
-                    <td>Total Typing Duration</td>
-                    <td>{authResult.profile.typingDuration} s</td>
-                    <td>{submittedFeatures ? submittedFeatures.typingDuration : '-'} s</td>
-                    <td>{Math.round(authResult.similarities.typingDuration * 100)}%</td>
-                    <td>15%</td>
-                  </tr>
-                  <tr>
-                    <td>Number of Backspaces</td>
-                    <td>{authResult.profile.backspaceCount}</td>
-                    <td>{submittedFeatures ? submittedFeatures.backspaceCount : '-'}</td>
-                    <td>{Math.round(authResult.similarities.backspaceCount * 100)}%</td>
-                    <td>7.5%</td>
-                  </tr>
-                  <tr>
-                    <td>Error Count (Edit Distance)</td>
-                    <td>{authResult.profile.errorCount}</td>
-                    <td>{submittedFeatures ? submittedFeatures.errorCount : '-'}</td>
-                    <td>{Math.round(authResult.similarities.errorCount * 100)}%</td>
-                    <td>7.5%</td>
-                  </tr>
-                </tbody>
-              </table>
+          {authResult.similarities && (
+            <div className="metrics-breakdown-wrapper">
+              <h4>Biometric Similarity Breakdown</h4>
+              <div className="table-responsive">
+                <table className="metrics-table">
+                  <thead>
+                    <tr>
+                      <th>Biometric Metric</th>
+                      <th>Profile Baseline</th>
+                      <th>Session Reading</th>
+                      <th>Component Similarity</th>
+                      <th>Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Average Key Hold Time</td>
+                      <td>{Math.round(authResult.profile.averageHoldTime)} ms</td>
+                      <td>{submittedFeatures ? Math.round(submittedFeatures.averageHoldTime) : '-'} ms</td>
+                      <td>{Math.round(authResult.similarities.averageHoldTime * 100)}%</td>
+                      <td>25%</td>
+                    </tr>
+                    <tr>
+                      <td>Average Flight Time</td>
+                      <td>{Math.round(authResult.profile.averageFlightTime)} ms</td>
+                      <td>{submittedFeatures ? Math.round(submittedFeatures.averageFlightTime) : '-'} ms</td>
+                      <td>{Math.round(authResult.similarities.averageFlightTime * 100)}%</td>
+                      <td>25%</td>
+                    </tr>
+                    <tr>
+                      <td>Typing Speed</td>
+                      <td>{Math.round(authResult.profile.typingSpeed)} WPM</td>
+                      <td>{submittedFeatures ? Math.round(submittedFeatures.typingSpeed) : '-'} WPM</td>
+                      <td>{Math.round(authResult.similarities.typingSpeed * 100)}%</td>
+                      <td>20%</td>
+                    </tr>
+                    <tr>
+                      <td>Total Typing Duration</td>
+                      <td>{authResult.profile.typingDuration} s</td>
+                      <td>{submittedFeatures ? submittedFeatures.typingDuration : '-'} s</td>
+                      <td>{Math.round(authResult.similarities.typingDuration * 100)}%</td>
+                      <td>15%</td>
+                    </tr>
+                    <tr>
+                      <td>Number of Backspaces</td>
+                      <td>{authResult.profile.backspaceCount}</td>
+                      <td>{submittedFeatures ? submittedFeatures.backspaceCount : '-'}</td>
+                      <td>{Math.round(authResult.similarities.backspaceCount * 100)}%</td>
+                      <td>7.5%</td>
+                    </tr>
+                    <tr>
+                      <td>Error Count (Edit Distance)</td>
+                      <td>{authResult.profile.errorCount}</td>
+                      <td>{submittedFeatures ? submittedFeatures.errorCount : '-'}</td>
+                      <td>{Math.round(authResult.similarities.errorCount * 100)}%</td>
+                      <td>7.5%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
         </section>
       )}
     </div>
