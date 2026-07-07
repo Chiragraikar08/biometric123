@@ -8,35 +8,32 @@ dotenv.config();
 const { Pool } = pg;
 
 // Load Env variables — credentials stay in .env, never hardcoded
-const pgConnectionString = process.env.DATABASE_URL
-  ? process.env.DATABASE_URL.replace(/[&?]channel_binding=[^&]*/g, '') // strip unsupported param
-  : null;
+// Read from env
+const rawUrl = process.env.DATABASE_URL;
+const pgConnectionString = rawUrl ? rawUrl.replace(/[&?]channel_binding=[^&]*/g, '') : null;
 
 let pool = null;
 let useFallback = true;
 const FALLBACK_FILE_PATH = path.resolve('behavior_profiles.json');
 
-// Initialize Pool if connection string is provided
-if (pgConnectionString) {
-  try {
-    pool = new Pool({
-      connectionString: pgConnectionString,
-      connectionTimeoutMillis: 8000,
-      ssl: true,
-    });
-    console.log('PostgreSQL Pool initialized with connection string.');
-  } catch (err) {
-    console.error('Failed to initialize PostgreSQL pool, falling back to JSON storage:', err.message);
-  }
-} else {
-  console.log('No DATABASE_URL provided. Using JSON file database fallback.');
-}
-
-let initError = null;
-export function getInitError() { return initError; }
-
 // Check database connection and create tables
 export async function initializeDatabase() {
+  const rawUrl = process.env.DATABASE_URL;
+  const pgConnectionString = rawUrl ? rawUrl.replace(/[&?]channel_binding=[^&]*/g, '') : null;
+
+  if (pgConnectionString && !pool) {
+    try {
+      pool = new Pool({
+        connectionString: pgConnectionString,
+        connectionTimeoutMillis: 8000,
+        ssl: true,
+      });
+      console.log('PostgreSQL Pool initialized inside request context.');
+    } catch (err) {
+      console.error('Failed to initialize PostgreSQL pool:', err);
+    }
+  }
+
   if (pool) {
     try {
       // Test connection

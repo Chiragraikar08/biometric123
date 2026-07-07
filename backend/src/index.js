@@ -33,12 +33,14 @@ app.use(express.json());
 
 // Start DB and then Server
 let dbInitPromise = null;
+let isDbInitialized = false;
 
 if (!process.env.VERCEL) {
   // Local: wait for DB before starting server
   async function startServer() {
     try {
       await initializeDatabase();
+      isDbInitialized = true;
       app.listen(PORT, () => {
         console.log(`==================================================`);
         console.log(` Behavioral Biometrics Server is running on port ${PORT}`);
@@ -51,18 +53,21 @@ if (!process.env.VERCEL) {
     }
   }
   startServer();
-} else {
-  // On Vercel serverless: kick off DB init and store the promise.
-  // Each request middleware awaits this before proceeding — fixes cold-start race condition.
-  dbInitPromise = initializeDatabase().catch(err => {
-    console.error('Database connection failed:', err);
-  });
 }
 
 // Middleware to await DB init on Vercel before handling any request
 app.use(async (req, res, next) => {
-  if (dbInitPromise) {
-    await dbInitPromise;
+  if (process.env.VERCEL) {
+    if (!isDbInitialized) {
+      if (!dbInitPromise) {
+        dbInitPromise = initializeDatabase().then(() => {
+          isDbInitialized = true;
+        }).catch(err => {
+          console.error('Database connection failed:', err);
+        });
+      }
+      await dbInitPromise;
+    }
   }
   next();
 });
