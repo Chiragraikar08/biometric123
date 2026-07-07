@@ -19,6 +19,9 @@ if (pgConnectionString) {
     pool = new Pool({
       connectionString: pgConnectionString,
       connectionTimeoutMillis: 5000, // Fail fast
+      ssl: {
+        rejectUnauthorized: false, // Required for Neon PostgreSQL on Vercel
+      },
     });
     console.log('PostgreSQL Pool initialized.');
   } catch (err) {
