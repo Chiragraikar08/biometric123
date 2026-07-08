@@ -96,8 +96,8 @@ export function calculateBehaviorScore(sessionFeatures, profile) {
   // Convert to 0 - 100 integer
   const behaviorScore = Math.min(100, Math.max(0, Math.round(totalScore * 100)));
   
-  // Decide match status (threshold = 80)
-  const threshold = 80;
+  // Decide match status (threshold = 70)
+  const threshold = 70;
   const status = behaviorScore >= threshold ? 'MATCH' : 'MISMATCH';
 
   return {

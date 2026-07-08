@@ -612,9 +612,9 @@ export function BehaviorAuthentication() {
                   : 'Access Denied. Typing pattern variance exceeds safe verification thresholds. Potential impersonation detected.'}
               </p>
               <div className="threshold-gauge">
-                <span>Min Match Threshold: 80%</span>
+                <span>Min Match Threshold: 70%</span>
                 <div className="threshold-bar-track">
-                  <div className="threshold-marker" style={{ left: '80%' }}></div>
+                  <div className="threshold-marker" style={{ left: '70%' }}></div>
                   <div className="score-marker-bar" style={{ width: `${authResult.behaviorScore}%`, backgroundColor: getScoreColor(authResult.behaviorScore) }}></div>
                 </div>
               </div>

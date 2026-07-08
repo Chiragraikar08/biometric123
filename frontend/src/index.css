@@ -549,7 +549,7 @@ body {
 }
 
 .threshold-marker::after {
-  content: '80%';
+  content: '70%';
   position: absolute;
   bottom: -15px;
   left: -10px;
