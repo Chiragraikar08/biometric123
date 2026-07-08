@@ -54,6 +54,10 @@ export async function analyzeBehavior(req, res) {
 
     // Registration flow
     if (register) {
+      if (profile) {
+        return res.status(409).json({ error: `User ID "${userId}" has already been created. Please use a different ID or authenticate.` });
+      }
+
       const savedProfile = await db.saveProfile(userId, {
         averageHoldTime,
         averageFlightTime,

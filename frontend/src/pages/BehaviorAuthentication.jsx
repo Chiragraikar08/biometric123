@@ -176,25 +176,7 @@ export function BehaviorAuthentication() {
     }
   };
 
-  const handleResetProfile = async () => {
-    if (!window.confirm(`Are you sure you want to delete the behavioral profile for user "${userId}"?`)) {
-      return;
-    }
-    setError('');
-    setSuccess('');
-    setAuthResult(null);
-    setIsLoading(true);
-    try {
-      await api.deleteUserProfile(userId);
-      setSuccess('Biometric profile deleted successfully.');
-      setProfile(null);
-      setActiveTab('register');
-    } catch (err) {
-      setError(err.message || 'Failed to delete profile.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   const getScoreColor = (score) => {
     if (score >= 90) return '#10b981'; // green
@@ -403,14 +385,6 @@ export function BehaviorAuthentication() {
           ) : profile ? (
             <span className="status-registered">
               ✓ Registered Profile Found ({dbType})
-              <button 
-                type="button" 
-                className="reset-profile-btn" 
-                onClick={handleResetProfile}
-                title="Delete this profile to start over"
-              >
-                Reset Profile
-              </button>
             </span>
           ) : (
             <span className="status-unregistered">✗ No Behavioral Profile Registered</span>
